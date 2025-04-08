@@ -8,7 +8,28 @@ type OptionsBuild int
 var _ Options = (*OptionsBuild)(nil)
 
 func (o OptionsBuild) toInt() C.int {
+	if !o.validate() {
+		return C.int(OptionsBuildKiwiBuildDefault)
+	}
 	return C.int(o)
+}
+
+func (o OptionsBuild) validate() bool {
+	switch o {
+	case OptionsBuildKiwiBuildIntegrateAllomorph,
+		OptionsBuildKiwiBuildLoadDefaultDict,
+		OptionsBuildKiwiBuildLoadTypoDict,
+		OptionsBuildKiwiBuildLoadMultiDict,
+		OptionsBuildKiwiBuildDefault,
+		OptionsBuildKiwiBuildModelTypeDefault,
+		OptionsBuildKiwiBuildModelTypeKNLM,
+		OptionsBuildKiwiBuildModelTypeSBG,
+		OptionsBuildKiwiBuildModelTypeCONG,
+		OptionsBuildKiwiBuildModelTypeCONGGlobal:
+		return true
+	default:
+		return false
+	}
 }
 
 const (

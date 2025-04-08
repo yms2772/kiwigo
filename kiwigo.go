@@ -105,6 +105,8 @@ func New(modelPath string, numThread int, options OptionsBuild) (Kiwi, error) {
 }
 
 type KiwiBuilder interface {
+	Build(typoCostThreshold float32) Kiwi
+	AddWord(form string, tag string, score float32)
 	ExtractWords(input string, minCnt, maxWordLen int, minScore, posThreshold float32) ([]WordInfo, error)
 }
 
@@ -112,11 +114,30 @@ type kiwiBuilder struct {
 	h C.kiwi_builder_h
 }
 
+var _ KiwiBuilder = (*kiwiBuilder)(nil)
+
 type WordInfo struct {
 	Form     string
 	Freq     int
 	POSScore float32
 	Score    float32
+}
+
+func (kb *kiwiBuilder) Build(typoCostThreshold float32) Kiwi {
+	kiwiH := C.kiwi_builder_build(kb.h, nil, C.float(typoCostThreshold))
+	if kiwiH == nil {
+		return nil
+	}
+	return &kiwi{h: kiwiH}
+}
+
+func (kb *kiwiBuilder) AddWord(form string, tag string, score float32) {
+	cForm := C.CString(form)
+	defer C.free(unsafe.Pointer(cForm))
+	cTag := C.CString(tag)
+	defer C.free(unsafe.Pointer(cTag))
+
+	C.kiwi_builder_add_word(kb.h, cForm, cTag, C.float(score))
 }
 
 func (kb *kiwiBuilder) ExtractWords(input string, minCnt, maxWordLen int, minScore, posThreshold float32) ([]WordInfo, error) {
@@ -126,7 +147,7 @@ func (kb *kiwiBuilder) ExtractWords(input string, minCnt, maxWordLen int, minSco
 
 	kiwiWsH := C.kiwi_builder_extract_words(
 		kb.h,
-		C.kiwi_reader_t(C.KiwiReaderBridge),
+		C.kiwi_reader_t(C.KiwiReader),
 		unsafe.Pointer(h),
 		C.int(minCnt),
 		C.int(maxWordLen),

@@ -1,6 +1,7 @@
 package kiwigo
 
 import (
+	"bytes"
 	"os"
 	"testing"
 )
@@ -8,35 +9,32 @@ import (
 const modelPath = "./models/base"
 
 func TestKiwi_Analyze(t *testing.T) {
-	k, err := New(modelPath, 0, OptionsBuildKiwiBuildDefault)
+	kb, err := NewBuilder(modelPath, 0, OptionsBuildKiwiBuildDefault)
 	if err != nil {
 		t.Fatalf("failed to create kiwi: %v", err)
 	}
 
+	kb.AddWord("맛집", "NNG", 0)
+	k := kb.Build(0)
+
 	body, _ := os.ReadFile("./testdata/keywords.txt")
-	result, err := k.Analyze(string(body), 1, OptionsAnalyzeKiwiMatchAll)
-	if err != nil {
-		t.Fatalf("failed to analyze: %v", err)
+	lines := bytes.Split(body, []byte("\n"))
+	category := make(map[string]int, len(lines))
+	for _, line := range lines {
+		result, err := k.Analyze(string(line), 1, OptionsAnalyzeKiwiMatchAll)
+		if err != nil {
+			t.Fatalf("failed to analyze: %v", err)
+		}
+
+		token := result[0].Tokens[len(result[0].Tokens)-1]
+		if token.Tag[0] == 'N' {
+			category[token.Form]++
+		}
 	}
 
-	for _, token := range result {
-		t.Logf("token: %v", token)
+	for item, v := range category {
+		if v >= 3 {
+			t.Logf("%s : %d", item, v)
+		}
 	}
 }
-
-//func TestKiwiBuilder_ExtractWords(t *testing.T) {
-//	kb, err := NewBuilder(modelPath, 0, OptionsBuildKiwiBuildDefault)
-//	if err != nil {
-//		t.Fatalf("failed to create kiwi builder: %v", err)
-//	}
-//
-//	body, _ := os.ReadFile("./testdata/keywords.txt")
-//	result, err := kb.ExtractWords(string(body), 5, 5, 0.0, -3.0)
-//	if err != nil {
-//		t.Fatalf("failed to extract words: %v", err)
-//	}
-//
-//	for _, token := range result {
-//		t.Logf("token: %v", token)
-//	}
-//}

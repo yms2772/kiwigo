@@ -8,7 +8,38 @@ type OptionsAnalyze int
 var _ Options = (*OptionsAnalyze)(nil)
 
 func (o OptionsAnalyze) toInt() C.int {
+	if !o.validate() {
+		return C.int(OptionsAnalyzeKiwiMatchAll)
+	}
 	return C.int(o)
+}
+
+func (o OptionsAnalyze) validate() bool {
+	switch o {
+	case OptionsAnalyzeKiwiMatchURL,
+		OptionsAnalyzeKiwiMatchEmail,
+		OptionsAnalyzeKiwiMatchHashtag,
+		OptionsAnalyzeKiwiMatchMention,
+		OptionsAnalyzeKiwiMatchSerial,
+		OptionsAnalyzeKiwiMatchNormalizeCoda,
+		OptionsAnalyzeKiwiMatchJoinNounPrefix,
+		OptionsAnalyzeKiwiMatchJoinNounSuffix,
+		OptionsAnalyzeKiwiMatchJoinVerbSuffix,
+		OptionsAnalyzeKiwiMatchJoinAdjSuffix,
+		OptionsAnalyzeKiwiMatchJoinAdvSuffix,
+		OptionsAnalyzeKiwiMatchJoinVSuffix,
+		OptionsAnalyzeKiwiMatchJoinAffix,
+		OptionsAnalyzeKiwiMatchSplitComplex,
+		OptionsAnalyzeKiwiMatchZCoda,
+		OptionsAnalyzeKiwiMatchCompatibleJamo,
+		OptionsAnalyzeKiwiMatchSplitSaisiot,
+		OptionsAnalyzeKiwiMatchMergeSaisiot,
+		OptionsAnalyzeKiwiMatchAll,
+		OptionsAnalyzeKiwiMatchAllWithNormalizing:
+		return true
+	default:
+		return false
+	}
 }
 
 const (
