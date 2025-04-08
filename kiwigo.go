@@ -105,7 +105,7 @@ func New(modelPath string, numThread int, options OptionsBuild) (Kiwi, error) {
 }
 
 type KiwiBuilder interface {
-	Build(typoCostThreshold float32) Kiwi
+	Build(typoCostThreshold float32) (Kiwi, error)
 	AddWord(form string, tag string, score float32)
 	ExtractWords(input string, minCnt, maxWordLen int, minScore, posThreshold float32) ([]WordInfo, error)
 }
@@ -123,12 +123,12 @@ type WordInfo struct {
 	Score    float32
 }
 
-func (kb *kiwiBuilder) Build(typoCostThreshold float32) Kiwi {
+func (kb *kiwiBuilder) Build(typoCostThreshold float32) (Kiwi, error) {
 	kiwiH := C.kiwi_builder_build(kb.h, nil, C.float(typoCostThreshold))
 	if kiwiH == nil {
-		return nil
+		return nil, getKiwiError()
 	}
-	return &kiwi{h: kiwiH}
+	return &kiwi{h: kiwiH}, nil
 }
 
 func (kb *kiwiBuilder) AddWord(form string, tag string, score float32) {
